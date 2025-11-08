@@ -1,0 +1,25 @@
+Bundle report — dist/assets
+-------------------------------------------------------------
+  file                                           size         gz
+-------------------------------------------------------------
+  index-C7yy10AJ.js                           2.10 MB  513.46 KB
+  index-BR2zJqct.js                           1.70 MB  413.80 KB
+  index-CefWm_8H.js                           1.66 MB  404.75 KB
+  index-mu1aPM0v.js                           1.54 MB  380.18 KB
+  index-BsxJ3MiL.js                         960.17 KB  223.60 KB
+  vendor_react-BUsZ_3ph.js                  185.30 KB   57.78 KB
+  vendor-CZEOA6MJ.js                        211.48 KB   38.85 KB
+  SendMoneyFlow-D-0AZgkC.js                  43.55 KB   10.26 KB
+  Dashboard-CTKQuJj5.js                      33.12 KB    8.71 KB
+  Dashboard-D4OwzBmA.js                      33.12 KB    8.71 KB
+  CardManagement-CwebN7PR.js                 27.40 KB    5.97 KB
+  AccountCreationFlow-CKuFhZMg.js            18.54 KB    5.04 KB
+  ServicesDashboard-D_7rs2I3.js              13.35 KB    3.92 KB
+  CryptoDashboard-8_o_IHni.js                12.65 KB    3.57 KB
+  CryptoDashboard-DCYSH60d.js                12.64 KB    3.57 KB
+  Accounts-D9tnkJjH.js                        9.58 KB    2.89 KB
+  PlatformFeatures-D8gfDY1I.js                5.21 KB    1.71 KB
+  FinancialAdvisor-D4h_c4qS.js                5.04 KB    1.63 KB
+  Investments-Chw0a_KY.js                     2.80 KB    1.01 KB
+-------------------------------------------------------------
+  TOTAL                                       8.54 MB    2.04 MB
