@@ -1,7 +1,8 @@
-import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react';
+import React, { useState, useEffect, useCallback, useMemo, useRef, lazy, Suspense } from 'react';
 import { Header } from './components/Header';
-import { Dashboard } from './components/Dashboard';
-import { SendMoneyFlow } from './components/SendMoneyFlow';
+// Lazy-load heavy views to improve initial bundle size
+// `Dashboard` and `CryptoDashboard` are named exports so we map them to default for `React.lazy`
+const Dashboard = lazy(() => import('./components/Dashboard').then(m => ({ default: m.Dashboard })));
 import { Recipients } from './components/Recipients';
 import { Transaction, Recipient, TransactionStatus, Card, CardTransaction, Notification, NotificationType, TransferLimits, Country, LoanApplication, LoanApplicationStatus, Account, VerificationLevel, CryptoHolding, CryptoAsset, SubscriptionService, AppleCardDetails, AppleCardTransaction, SpendingLimit, SpendingCategory, TravelPlan, TravelPlanStatus, SecuritySettings, TrustedDevice, UserProfile, PlatformSettings, PlatformTheme, View, Task, FlightBooking, UtilityBill, UtilityBiller, AdvisorResponse, BalanceDisplayMode, AccountType, AirtimePurchase, PushNotification, PushNotificationSettings, PrivacySettings, SavedSession, VirtualCard, CharitableCause, Donation, AirtimeProvider } from './types';
 import { INITIAL_RECIPIENTS, INITIAL_TRANSACTIONS, INITIAL_CARDS, INITIAL_VIRTUAL_CARDS, INITIAL_CARD_TRANSACTIONS, INITIAL_TRANSFER_LIMITS, SELF_RECIPIENT, INITIAL_ACCOUNTS, getInitialCryptoAssets, INITIAL_CRYPTO_HOLDINGS, CRYPTO_TRADE_FEE_PERCENT, INITIAL_SUBSCRIPTIONS, INITIAL_APPLE_CARD_DETAILS, INITIAL_APPLE_CARD_TRANSACTIONS, INITIAL_TRAVEL_PLANS, INITIAL_SECURITY_SETTINGS, INITIAL_TRUSTED_DEVICES, USER_PROFILE, INITIAL_PLATFORM_SETTINGS, THEME_COLORS, INITIAL_TASKS, INITIAL_FLIGHT_BOOKINGS, INITIAL_UTILITY_BILLS, getUtilityBillers, getAirtimeProviders, INITIAL_AIRTIME_PURCHASES, INITIAL_PUSH_SETTINGS, NEW_USER_PROFILE_TEMPLATE, NEW_USER_ACCOUNTS_TEMPLATE, USER_PASSWORD, NETWORK_AUTH_CODE, EXCHANGE_RATES as STATIC_EXCHANGE_RATES, CHARITABLE_CAUSES } from './constants';
@@ -9,23 +10,27 @@ import * as Icons from './components/Icons';
 import { Welcome } from './components/Welcome';
 import { ActivityLog } from './components/ActivityLog';
 import { Security } from './components/Security';
-import { CardManagement } from './components/CardManagement';
 import { Loans } from './components/Loans';
 import { Support } from './components/Support';
-import { Accounts } from './components/Accounts';
-import { CryptoDashboard } from './components/CryptoDashboard';
-import { ServicesDashboard } from './components/ServicesDashboard';
+// Lazy-load additional heavy views to reduce initial bundle size
+const CardManagement = lazy(() => import('./components/CardManagement').then(m => ({ default: m.CardManagement })));
+const Accounts = lazy(() => import('./components/Accounts').then(m => ({ default: m.Accounts })));
+const CryptoDashboard = lazy(() => import('./components/CryptoDashboard').then(m => ({ default: m.CryptoDashboard })));
+const ServicesDashboard = lazy(() => import('./components/ServicesDashboard').then(m => ({ default: m.ServicesDashboard })));
+const PlatformFeatures = lazy(() => import('./components/PlatformFeatures').then(m => ({ default: m.PlatformFeatures })));
+const FinancialAdvisor = lazy(() => import('./components/FinancialAdvisor').then(m => ({ default: m.FinancialAdvisor })));
+const Investments = lazy(() => import('./components/Investments').then(m => ({ default: m.Investments })));
+const SendMoneyFlow = lazy(() => import('./components/SendMoneyFlow').then(m => ({ default: m.SendMoneyFlow })));
+const AccountCreationFlow = lazy(() => import('./components/AccountCreationFlow').then(m => ({ default: m.AccountCreationFlow })));
 import { LogoutConfirmationModal } from './components/LogoutConfirmationModal';
 import { InactivityModal } from './components/InactivityModal';
 import { TravelCheckIn } from './components/TravelCheckIn';
-import { PlatformFeatures } from './components/PlatformFeatures';
 import { DynamicIslandSimulator } from './components/DynamicIslandSimulator';
 import { BankingChat } from './components/BankingChat';
 import { Tasks } from './components/Tasks';
 import { Flights } from './components/Flights';
 import { Utilities } from './components/Utilities';
 import { Integrations } from './components/Integrations';
-import { FinancialAdvisor } from './components/FinancialAdvisor';
 import {
   sendTransactionalEmail,
   generateTransactionReceiptEmail,
@@ -53,7 +58,6 @@ import {
 } from './services/notificationService';
 import { ChangePasswordModal } from './components/ChangePasswordModal';
 import { Insurance } from './components/Insurance';
-import { Investments } from './components/Investments';
 import { AtmLocator } from './components/AtmLocator';
 import { Quickteller } from './components/Quickteller';
 import { QrScanner } from './components/QrScanner';
@@ -72,7 +76,6 @@ import { GlobalNetwork } from './components/GlobalNetwork';
 
 
 import { OpeningSequence } from './components/OpeningSequence';
-import { AccountCreationFlow } from './components/AccountCreationFlow';
 import { LoggedOut } from './components/LoggedOut';
 import { ProfileSignIn } from './components/ProfileSignIn';
 import { PushNotificationToast } from './components/PushNotificationToast';
@@ -754,9 +757,13 @@ const AppComponent = () => {
       return <Welcome onLogin={handleLogin} onStartCreateAccount={() => setAuthState('account_creation')} />;
   }
   
-  if (authState === 'account_creation') {
-      return <AccountCreationFlow onBackToLogin={() => setAuthState('profile_signin')} onCreateAccountSuccess={handleCreateAccount} />;
-  }
+    if (authState === 'account_creation') {
+            return (
+                <Suspense fallback={<div className="w-full py-24 flex items-center justify-center"><Icons.SpinnerIcon className="w-6 h-6 animate-spin text-primary-500" /></div>}>
+                    <AccountCreationFlow onBackToLogin={() => setAuthState('profile_signin')} onCreateAccountSuccess={handleCreateAccount} />
+                </Suspense>
+            );
+    }
 
   if (authState === 'opening') {
       return <OpeningSequence onComplete={() => setAuthState('logged_in')} />;
@@ -786,13 +793,26 @@ const AppComponent = () => {
       />
       <main className={`transition-transform duration-300 ease-in-out ${isMenuOpen ? 'translate-x-16 sm:translate-x-72' : ''}`}>
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-              {mainContent}
+              <Suspense fallback={
+                  <div className="w-full py-24 flex items-center justify-center">
+                      <div className="flex items-center space-x-3">
+                          <Icons.SpinnerIcon className="w-6 h-6 animate-spin text-primary-500" />
+                          <span className="text-slate-500">Loading...</span>
+                      </div>
+                  </div>
+              }>
+                  {mainContent}
+              </Suspense>
           </div>
       </main>
       <Footer setActiveView={setActiveView} />
 
       {/* Modals and Overlays */}
-      {isSendMoneyFlowOpen && <SendMoneyFlow onDepositCheck={() => {}} onSplitTransaction={() => true} initialTab={initialSendMoneyTab} onContactSupport={() => setIsContactSupportModalOpen(true)} onPayFee={handleOpenFeePayment} recipients={recipients} accounts={accounts} createTransaction={createTransaction} transactions={transactions} securitySettings={securitySettings} hapticsEnabled={platformSettings.hapticsEnabled} onAuthorizeTransaction={handleAuthorizeTransaction} setActiveView={setActiveView} onClose={() => setIsSendMoneyFlowOpen(false)} onLinkAccount={() => {}} userProfile={userProfile} exchangeRates={exchangeRates} />}
+            {isSendMoneyFlowOpen && (
+                <Suspense fallback={<div className="fixed inset-0 flex items-center justify-center z-60"><Icons.SpinnerIcon className="w-8 h-8 animate-spin text-primary-500"/></div>}>
+                    <SendMoneyFlow onDepositCheck={() => {}} onSplitTransaction={() => true} initialTab={initialSendMoneyTab} onContactSupport={() => setIsContactSupportModalOpen(true)} onPayFee={handleOpenFeePayment} recipients={recipients} accounts={accounts} createTransaction={createTransaction} transactions={transactions} securitySettings={securitySettings} hapticsEnabled={platformSettings.hapticsEnabled} onAuthorizeTransaction={handleAuthorizeTransaction} setActiveView={setActiveView} onClose={() => setIsSendMoneyFlowOpen(false)} onLinkAccount={() => {}} userProfile={userProfile} exchangeRates={exchangeRates} />
+                </Suspense>
+            )}
       {isAddRecipientModalOpen && <AddRecipientModal onClose={() => setIsAddRecipientModalOpen(false)} onAddRecipient={addRecipient} recipientToEdit={recipientToEdit} onUpdateRecipient={onUpdateRecipient} recipients={recipients} />}
       {isChangePasswordModalOpen && <ChangePasswordModal onClose={() => setIsChangePasswordModalOpen(false)} onSuccess={() => addNotification(NotificationType.SECURITY, 'Password Changed', 'Your password has been successfully updated.')}/>}
       {isContactSupportModalOpen && <ContactSupportModal onClose={() => setIsContactSupportModalOpen(false)} onSubmit={handleSupportSubmit} transactions={transactions} />}
